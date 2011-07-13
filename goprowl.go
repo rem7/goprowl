@@ -11,6 +11,14 @@ const (
 	API_URL    = API_SERVER + ADD_PATH
 )
 
+type Notification struct {
+    Application string
+    Description string
+    Event string
+    Priority string
+    Providerkey string
+    Url string
+}
 
 type Goprowl struct {
 	apikeys []string
@@ -31,17 +39,18 @@ func (gp *Goprowl) RegisterKey(key string) {
 func (gp *Goprowl) DelKey(key string) {
 }
 
-func (gp *Goprowl) Push(app string, event string, description string, priority string) {
+// func (gp *Goprowl) Push(app string, event string, description string, priority string) {
+func (gp *Goprowl) Push(n *Notification) {
 
 	ch := make(chan string)
 
 	for _, apikey := range gp.apikeys {
 
 		apikeyList := []string{apikey}
-		applicationList := []string{app}
-		eventList := []string{event}
-		descriptionList := []string{description}
-		priorityList := []string{priority}
+		applicationList := []string{n.Application}
+		eventList := []string{n.Event}
+		descriptionList := []string{n.Description}
+		priorityList := []string{n.Priority}
 		vals := http.Values{"apikey": apikeyList,
 			"application": applicationList,
 			"description": descriptionList,
