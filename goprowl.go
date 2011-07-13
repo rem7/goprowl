@@ -58,7 +58,7 @@ func (gp *Goprowl) RegisterKey(key string) {
 func (gp *Goprowl) DelKey(key string) {
 }
 
-func (gp *Goprowl) Push(app string, event string, description string, priority string) {
+func (gp *Goprowl) Push(app string, event string, description string, priority string, url ...string) {
 
 	ch := make(chan string)
 
@@ -74,6 +74,10 @@ func (gp *Goprowl) Push(app string, event string, description string, priority s
 			"description": descriptionList,
 			"event":       eventList,
 			"priority":    priorityList}
+
+		if len(url) > 0 {
+			vals["url"] = []string{url[0]}
+		}
 
 		// overkill?
 		go func(key string) {
