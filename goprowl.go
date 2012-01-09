@@ -62,15 +62,12 @@ func (gp *Goprowl) RegisterKey(key string) {
 	}
 
 	gp.apikeys = append(gp.apikeys, key)
-
 }
 
 func (gp *Goprowl) DelKey(key string) {
 }
 
 func (gp *Goprowl) Push(n *Notification) {
-
-	ch := make(chan string)
 
 	keycsv := strings.Join(gp.apikeys, ",")
 	applicationList := []string{n.Application}
@@ -94,24 +91,13 @@ func (gp *Goprowl) Push(n *Notification) {
 		vals["providerkey"] = []string{n.Providerkey}
 	}
 
-	// overkill?
-	go func() {
-		r, err := http.PostForm(API_URL, vals)
+	r, err := http.PostForm(API_URL, vals)
 
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			ch <- ""
-		} else {
-			if r.StatusCode != 200 {
-				ch <- ""
-			} else {
-				ch <- ""
-			}
+	if err != nil {
+		fmt.Printf("%s\n", err)
+	} else {
+		if r.StatusCode != 200 {
+			fmt.Printf("Error, status code: %d\n", r.StatusCode)
 		}
-	}()
-
-	rc := <-ch
-	if rc != "" {
-		fmt.Printf("The following key failed: %s\n", keycsv)
 	}
 }
