@@ -28,6 +28,7 @@
 package goprowl
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -67,7 +68,7 @@ func (gp *Goprowl) RegisterKey(key string) {
 func (gp *Goprowl) DelKey(key string) {
 }
 
-func (gp *Goprowl) Push(n *Notification) {
+func (gp *Goprowl) Push(n *Notification) (err error) {
 
 	keycsv := strings.Join(gp.apikeys, ",")
 
@@ -90,10 +91,11 @@ func (gp *Goprowl) Push(n *Notification) {
 	r, err := http.PostForm(API_URL, vals)
 
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		return
 	} else {
 		if r.StatusCode != 200 {
-			fmt.Printf("Error, status code: %d\n", r.StatusCode)
+			err = errors.New(r.Status)
 		}
 	}
+	return
 }
