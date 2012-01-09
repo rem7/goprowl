@@ -70,17 +70,13 @@ func (gp *Goprowl) DelKey(key string) {
 func (gp *Goprowl) Push(n *Notification) {
 
 	keycsv := strings.Join(gp.apikeys, ",")
-	applicationList := []string{n.Application}
-	eventList := []string{n.Event}
-	descriptionList := []string{n.Description}
-	priorityList := []string{n.Priority}
 
 	vals := url.Values{
 		"apikey":      []string{keycsv},
-		"application": applicationList,
-		"description": descriptionList,
-		"event":       eventList,
-		"priority":    priorityList,
+		"application": []string{n.Application},
+		"description": []string{n.Description},
+		"event":       []string{n.Event},
+		"priority":    []string{n.Priority},
 	}
 
 	if n.Url != "" {
