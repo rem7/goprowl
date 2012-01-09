@@ -93,6 +93,7 @@ func (gp *Goprowl) Push(n *Notification) (err error) {
 	if err != nil {
 		return
 	} else {
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			err = errors.New(r.Status)
 		}
