@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 const (
@@ -71,58 +72,46 @@ func (gp *Goprowl) Push(n *Notification) {
 
 	ch := make(chan string)
 
-	for _, apikey := range gp.apikeys {
+	keycsv := strings.Join(gp.apikeys, ",")
+	applicationList := []string{n.Application}
+	eventList := []string{n.Event}
+	descriptionList := []string{n.Description}
+	priorityList := []string{n.Priority}
 
-		apikeyList := []string{apikey}
-		applicationList := []string{n.Application}
-		eventList := []string{n.Event}
-		descriptionList := []string{n.Description}
-		priorityList := []string{n.Priority}
-		vals := url.Values{"apikey": apikeyList,
-			"application": applicationList,
-			"description": descriptionList,
-			"event":       eventList,
-			"priority":    priorityList}
+	vals := url.Values{
+		"apikey":      []string{keycsv},
+		"application": applicationList,
+		"description": descriptionList,
+		"event":       eventList,
+		"priority":    priorityList,
+	}
 
-		if n.Url != "" {
-			vals["url"] = []string{n.Url}
-		}
+	if n.Url != "" {
+		vals["url"] = []string{n.Url}
+	}
 
-		if n.Providerkey != "" {
-			vals["providerkey"] = []string{n.Providerkey}
-		}
+	if n.Providerkey != "" {
+		vals["providerkey"] = []string{n.Providerkey}
+	}
 
-		// overkill?
-		go func(key string) {
-			r, err := http.PostForm(API_URL, vals)
+	// overkill?
+	go func() {
+		r, err := http.PostForm(API_URL, vals)
 
-			if err != nil {
-				fmt.Printf("%s\n", err)
-				ch <- key
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			ch <- ""
+		} else {
+			if r.StatusCode != 200 {
+				ch <- ""
 			} else {
-				if r.StatusCode != 200 {
-					ch <- key
-				} else {
-					ch <- ""
-				}
+				ch <- ""
 			}
-
-		}(apikey)
-
-	}
-
-	//fmt.Printf("Waiting...\n")
-	for i := 0; ; i++ {
-
-		if i == len(gp.apikeys) {
-			break
 		}
+	}()
 
-		rc := <-ch
-		if rc != "" {
-			fmt.Printf("The following key failed: %s\n", rc)
-		}
-
+	rc := <-ch
+	if rc != "" {
+		fmt.Printf("The following key failed: %s\n", keycsv)
 	}
-
 }
