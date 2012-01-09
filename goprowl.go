@@ -28,8 +28,13 @@
 package goprowl
 
 import (
-	"http"
+	"encoding/xml"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 const (
@@ -39,16 +44,23 @@ const (
 )
 
 type Notification struct {
-    Application string
-    Description string
-    Event string
-    Priority string
-    Providerkey string
-    Url string
+	Application string
+	Description string
+	Event       string
+	Priority    string
+	Providerkey string
+	Url         string
 }
 
 type Goprowl struct {
 	apikeys []string
+}
+
+type errorResponse struct {
+	Error struct {
+		Code    int    `xml:"attr"`
+		Message string `xml:"chardata"`
+	}
 }
 
 func (gp *Goprowl) RegisterKey(key string) {
@@ -60,69 +72,50 @@ func (gp *Goprowl) RegisterKey(key string) {
 	}
 
 	gp.apikeys = append(gp.apikeys, key)
-
 }
 
 func (gp *Goprowl) DelKey(key string) {
 }
 
-func (gp *Goprowl) Push(n *Notification) {
+func decodeError(def string, r io.Reader) (err error) {
+	xres := errorResponse{}
+	if xml.Unmarshal(r, &xres) != nil {
+		err = errors.New(def)
+	} else {
+		err = errors.New(xres.Error.Message)
+	}
+	return
+}
 
-	ch := make(chan string)
+func (gp *Goprowl) Push(n *Notification) (err error) {
 
-	for _, apikey := range gp.apikeys {
+	keycsv := strings.Join(gp.apikeys, ",")
 
-		apikeyList := []string{apikey}
-		applicationList := []string{n.Application}
-		eventList := []string{n.Event}
-		descriptionList := []string{n.Description}
-		priorityList := []string{n.Priority}
-		vals := http.Values{"apikey": apikeyList,
-			"application": applicationList,
-			"description": descriptionList,
-			"event":       eventList,
-			"priority":    priorityList}
-
-		if n.Url != "" {
-			vals["url"] = []string{n.Url}
-		}
-
-		if n.Providerkey != "" {
-			vals["providerkey"] = []string{n.Providerkey}
-		}
-
-		// overkill?
-		go func(key string) {
-			r, err := http.PostForm(API_URL, vals)
-
-			if err != nil {
-				fmt.Printf("%s\n", err)
-				ch <- key
-			} else {
-				if r.StatusCode != 200 {
-					ch <- key
-				} else {
-					ch <- ""
-				}
-			}
-
-		}(apikey)
-
+	vals := url.Values{
+		"apikey":      []string{keycsv},
+		"application": []string{n.Application},
+		"description": []string{n.Description},
+		"event":       []string{n.Event},
+		"priority":    []string{n.Priority},
 	}
 
-
-	//fmt.Printf("Waiting...\n")
-	for i := 0; ; i++ {
-
-		if i == len(gp.apikeys) {
-			break
-		}
-
-		rc := <-ch
-		if rc != "" {
-			fmt.Printf("The following key failed: %s\n", rc)
-		}
-
+	if n.Url != "" {
+		vals["url"] = []string{n.Url}
 	}
 
+	if n.Providerkey != "" {
+		vals["providerkey"] = []string{n.Providerkey}
+	}
+
+	r, err := http.PostForm(API_URL, vals)
+
+	if err != nil {
+		return
+	} else {
+		defer r.Body.Close()
+		if r.StatusCode != 200 {
+			err = decodeError(r.Status, r.Body)
+		}
+	}
+	return
 }
