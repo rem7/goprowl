@@ -31,6 +31,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -76,6 +77,16 @@ func (gp *Goprowl) RegisterKey(key string) {
 func (gp *Goprowl) DelKey(key string) {
 }
 
+func decodeError(def string, r io.Reader) (err error) {
+	xres := errorResponse{}
+	if xml.Unmarshal(r, &xres) != nil {
+		err = errors.New(def)
+	} else {
+		err = errors.New(xres.Error.Message)
+	}
+	return
+}
+
 func (gp *Goprowl) Push(n *Notification) (err error) {
 
 	keycsv := strings.Join(gp.apikeys, ",")
@@ -103,12 +114,7 @@ func (gp *Goprowl) Push(n *Notification) (err error) {
 	} else {
 		defer r.Body.Close()
 		if r.StatusCode != 200 {
-			xres := errorResponse{}
-			if xml.Unmarshal(r.Body, &xres) != nil {
-				err = errors.New(r.Status)
-			} else {
-				err = errors.New(xres.Error.Message)
-			}
+			err = decodeError(r.Status, r.Body)
 		}
 	}
 	return
