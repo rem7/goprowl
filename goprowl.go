@@ -28,6 +28,7 @@
 package goprowl
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"net/http"
@@ -52,6 +53,13 @@ type Notification struct {
 
 type Goprowl struct {
 	apikeys []string
+}
+
+type errorResponse struct {
+	Error struct {
+		Code    int    `xml:"attr"`
+		Message string `xml:"chardata"`
+	}
 }
 
 func (gp *Goprowl) RegisterKey(key string) {
@@ -95,7 +103,12 @@ func (gp *Goprowl) Push(n *Notification) (err error) {
 	} else {
 		defer r.Body.Close()
 		if r.StatusCode != 200 {
-			err = errors.New(r.Status)
+			xres := errorResponse{}
+			if xml.Unmarshal(r.Body, &xres) != nil {
+				err = errors.New(r.Status)
+			} else {
+				err = errors.New(xres.Error.Message)
+			}
 		}
 	}
 	return
