@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/rem7/goprowl"
+	"os"
 	"strings"
 )
 
@@ -30,5 +32,8 @@ func main() {
 		Url:         url,
 	}
 
-	p.Push(&n)
+	if err := p.Push(&n); err != nil {
+		fmt.Fprintf(os.Stderr, "Error sending message:  %v\n", err)
+		os.Exit(1)
+	}
 }
