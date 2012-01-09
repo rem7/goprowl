@@ -28,8 +28,9 @@
 package goprowl
 
 import (
-	"http"
 	"fmt"
+	"net/http"
+	"net/url"
 )
 
 const (
@@ -39,12 +40,12 @@ const (
 )
 
 type Notification struct {
-    Application string
-    Description string
-    Event string
-    Priority string
-    Providerkey string
-    Url string
+	Application string
+	Description string
+	Event       string
+	Priority    string
+	Providerkey string
+	Url         string
 }
 
 type Goprowl struct {
@@ -77,7 +78,7 @@ func (gp *Goprowl) Push(n *Notification) {
 		eventList := []string{n.Event}
 		descriptionList := []string{n.Description}
 		priorityList := []string{n.Priority}
-		vals := http.Values{"apikey": apikeyList,
+		vals := url.Values{"apikey": apikeyList,
 			"application": applicationList,
 			"description": descriptionList,
 			"event":       eventList,
@@ -109,7 +110,6 @@ func (gp *Goprowl) Push(n *Notification) {
 		}(apikey)
 
 	}
-
 
 	//fmt.Printf("Waiting...\n")
 	for i := 0; ; i++ {
