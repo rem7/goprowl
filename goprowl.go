@@ -79,7 +79,7 @@ func (gp *Goprowl) DelKey(key string) {
 
 func decodeError(def string, r io.Reader) (err error) {
 	xres := errorResponse{}
-	if xml.Unmarshal(r, &xres) != nil {
+	if xml.NewDecoder(r).Decode(&xres) != nil {
 		err = errors.New(def)
 	} else {
 		err = errors.New(xres.Error.Message)
