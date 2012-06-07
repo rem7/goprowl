@@ -58,9 +58,9 @@ type Goprowl struct {
 
 type errorResponse struct {
 	Error struct {
-		Code    int    `xml:"attr"`
-		Message string `xml:"chardata"`
-	}
+		Code    int    `xml:"code,attr"`
+		Message string `xml:",chardata"`
+	} `xml:"error"`
 }
 
 func (gp *Goprowl) RegisterKey(key string) {
