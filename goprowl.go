@@ -30,7 +30,6 @@ package goprowl
 import (
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -63,18 +62,26 @@ type errorResponse struct {
 	} `xml:"error"`
 }
 
-func (gp *Goprowl) RegisterKey(key string) {
+func (gp *Goprowl) RegisterKey(key string) error {
 
 	if len(key) != 40 {
-
-		fmt.Printf("Error, Apikey must be 40 characters long.\n")
-		// need to raise an error.
+		return errors.New("Error, Apikey must be 40 characters long.")
 	}
 
 	gp.apikeys = append(gp.apikeys, key)
+	return nil
 }
 
-func (gp *Goprowl) DelKey(key string) {
+func (gp *Goprowl) DelKey(key string) error {
+	for i, value := range gp.apikeys {
+		if strings.EqualFold(key, value) {
+			copy(gp.apikeys[i:], gp.apikeys[i+1:])
+			gp.apikeys[len(gp.apikeys) - 1] = ""
+			gp.apikeys = gp.apikeys[:len(gp.apikeys) - 1]
+			return nil
+		}
+	}
+	return errors.New("Error, key not found")
 }
 
 func decodeError(def string, r io.Reader) (err error) {
