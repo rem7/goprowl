@@ -10,7 +10,11 @@ Usage
 
 	var p goprowl.Goprowl
 
-	p.RegisterKey("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+	err := p.RegisterKey("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+	if err != nil {
+		fmt.Println("Unable to register key! - " + + err.Error())
+		return
+	}
 
 	n := &goprowl.Notification{
 	    Application : "Foo",
@@ -21,4 +25,12 @@ Usage
 		Url: "www.foobar.com",		
 	}
 
-	p.Push(n)
+	err = p.Push(n)
+	if err != nil {
+		fmt.Println("Unable to send Prowl notification! - " + + err.Error())
+	}
+	
+	err = p.DelKey("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+	if err != nil {
+		fmt.Println("Unable to remove key! - " + err.Error())
+	}
