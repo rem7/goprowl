@@ -22,7 +22,10 @@ func main() {
 	flag.Parse()
 
 	p := goprowl.Goprowl{}
-	p.RegisterKey(apikey)
+	if err := p.RegisterKey(apikey); err != nil {
+		fmt.Fprintf(os.Stderr, "Error registering key:  %v\n", err)
+		os.Exit(1)
+	}
 
 	n := goprowl.Notification{
 		Application: application,
